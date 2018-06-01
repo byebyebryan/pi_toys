@@ -17,6 +17,9 @@ print('[{}] Sending to cluster: {}'.format(time.ctime(), args.command))
 # Ports are handled in ~/.ssh/config since we use OpenSSH
 command=args.command
 
+if command == 'reboot' : command = 'sudo reboot'
+elif command == 'update' : command = 'sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y'
+
 sps=[]
 
 for node in nodes:
@@ -25,11 +28,12 @@ for node in nodes:
 while sps:
     for sp in sps:
         sp.poll()
-        if sp.returncode is not None:
-            res = sp.stdout.readlines()
-            if res:
-                print('[{}] Result from {}:\n'.format(time.ctime(), sp.args[1]))
-                print(''.join(map(lambda x:x.decode('utf-8'),res)))
+        res = sp.stdout.readlines()
+        if res:
+            print('[{}] Result from {}:'.format(time.ctime(), sp.args[1]))
+            print(''.join(map(lambda x:x.decode('utf-8'),res)).rstrip())
+            print('\n')
+            
 
     sps = [x for x in sps if x.returncode is None]
-    time.sleep(1)
+    time.sleep(0.1)
